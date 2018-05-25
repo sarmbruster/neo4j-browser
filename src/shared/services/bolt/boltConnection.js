@@ -46,7 +46,7 @@ const _routingAvailability = () => {
 
 const validateConnection = (driver, res, rej) => {
   if (!driver || !driver.session) return rej('No connection')
-  const tmp = driver.session()
+  const tmp = driver.session(neo4j.session.READ)
   tmp
     .run('CALL db.indexes()')
     .then(() => {
@@ -229,7 +229,9 @@ export function directTransaction (
   requestId = null,
   cancelable = false
 ) {
-  const session = _drivers ? _drivers.getDirectDriver().session() : false
+  const session = _drivers
+    ? _drivers.getDirectDriver().session(neo4j.session.READ)
+    : false
   if (!cancelable) return _transaction(input, parameters, session)
   return _trackedTransaction(input, parameters, session, requestId)
 }
@@ -254,7 +256,7 @@ export function routedWriteTransaction (
   cancelable = false
 ) {
   const session = _drivers
-    ? _drivers.getRoutedDriver().session(neo4j.session.WRITE)
+    ? _drivers.getRoutedDriver().session(neo4j.session.READ)
     : false
   if (!cancelable) return _transaction(input, parameters, session)
   return _trackedTransaction(input, parameters, session, requestId)
@@ -268,7 +270,9 @@ export const closeConnection = () => {
 }
 
 export const ensureConnection = (props, opts, onLostConnection) => {
-  const session = _drivers ? _drivers.getDirectDriver().session() : false
+  const session = _drivers
+    ? _drivers.getDirectDriver().session(neo4j.session.READ)
+    : false
   if (session) {
     return new Promise((resolve, reject) => {
       session.close()
